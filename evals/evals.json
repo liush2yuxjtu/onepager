@@ -1,0 +1,17 @@
+{
+  "skill_name": "onepager",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我的 mac 最近太热了，风扇声音很大。帮我诊断一下发热原因，并生成一个交互式 HTML 报告：要能看到最占资源的进程、能按 CPU 排序、能搜索进程名，还要有一个可以勾选和复制成 markdown 的行动清单。注意信息不要一次全铺出来，结论要一眼看到。",
+      "expected_output": "A single self-contained interactive HTML file: verdict-first line under title, searchable + sortable process table, checkable action list with copy-to-markdown button, evidence collapsed or on-demand, provenance footer. Saved to outputs/.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我上个月做的项目验收报告 HTML 太臃肿了，一个页面有 6 个大 tab、每 tab 都是几十行表格，评审说看不动。帮我把这份报告重做成一个精炼的交互式单页：结论放最上面，细节折叠起来，但搜索、筛选、可点击的条目、勾选清单这些交互一个都不能丢。",
+      "expected_output": "A redesigned single-page HTML: one-line verdict first, details behind collapsible sections or on-demand filters, ALL interactive affordances preserved (search / sort / clickable rows / checklist / copy), self-contained. Saved to outputs/.",
+      "files": []
+    }
+  ]
+}
