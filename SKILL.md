@@ -27,6 +27,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 6. **单文件自包含**：无 CDN、无构建步骤、离线可用、手机可看。交付物不绑架用户环境。
 7. **组合产物：main + subs，inline 链接省 token**：交付物需要多个页面时（如主报告 + 子报告 / 多 tab 数据看板 / 报告 + 附录），**不要把所有内容塞进一个超大 HTML**。分开生成：一个 `main.html`（结论前置 + 各 sub 的摘要行 + 链接/iframe）加多个 `sub-*.html`（每个自包含、可独立打开）。main 只放结论 + 窄网关，sub 才放全量证据。原因：单文件 >200KB 时，每次迭代 agent 都要重读/重写整份文件，token 成本爆炸、diff 难读、浏览器渲染卡顿；拆开后 main 始终轻量，只有打开对应 sub 才加载全量。
 8. **改动预览 = 冻结窄门条 + 定位闪烁**：交付物要改动时（尤其是超长单 HTML / SPA 原型），在文件顶部注入一条**默认折叠的冻结顶栏**：一行结论（"本次 N 处改动"）+ 每处改动一个可点 tag（`NEW #chg-2`）。tag 即窄门：点 tag → 定位到改动处（闪烁 + 金色边框 + tag 变 active），点"展开 ▾"才显示完整详情（摘要行 + 跳转 → + 勾选 + 复制 MD）。默认折叠 = 不遮挡页面，评审只看增量；展开 = 完整行动闭环。
+9. **设计稿 vs WebApp = 漂移基准，不是数 selector**：对比设计稿（意图）与实现（交付）时，**不要数 selector/动作数量**（数量由架构决定，无意义）。要测**语义 Fidelity**——逐域分类 4 态：`full`（意图全落地）/ `partial`（部分落地）/ `gap`（设计有、实现无）/ `overflow`（实现有、设计未规划）。结论用分布 + 意图实现率（如 92% 123/133），并标注"溢出 ≠ 偏离"（工程超越设计）。方法：按域提取两侧动作集 → 求共享/独有 → 逐域判 4 态 → 对抗验证（子代理复核，纠正误判，如 chat 实为 full 非 partial）。
 
 ## 触发时机
 
@@ -35,6 +36,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - 用户提到 窄门 / small interface / 最小必要信息
 - 刚产出的全量报告被用户否掉（"信息太多" / "失去交互"）——立刻用本法则重做
 - 用户要给超长单 HTML / SPA 原型做改动预览（"改了哪" / "怎么预览变更"）——用改动预览模式
+- 用户要对比设计稿与实现（"benchmark design vs webapp" / "设计稿和实现差多少" / "selector 对比"）——用漂移基准
 
 ## 工作流
 
@@ -77,6 +79,18 @@ compatibility: any environment where an AI agent can write a single self-contain
 5. **避开 SPA 路由劫持**：hash 路由应用会拦截 `<a href="#chg-1">` 把 hash 改写成业务路由——跳转一律用 `href="javascript:void(0)"` + JS `scrollIntoView`，**不用 hash 锚点**。
 6. **行动闭环**：展开详情 = 每处一行摘要（原→新）+ 勾选 + 复制 Markdown 清单回传设计者。
 
+### 9. 设计稿 vs WebApp 漂移基准
+对比设计稿与实现时（如用户说"benchmark design vs webapp"）：
+1. **意图/交付定位**：设计稿 = 意图（intent），WebApp = 交付（delivery）。问题是"交付 vs 意图差距在哪、多大"，不是"谁的动作多"。
+2. **提取两侧动作集**：按域（domain）收集设计稿与实现的交互动作/selector（`data-action` 等稳定标识）。记录每域：设计数、实现数、共享数。
+3. **逐域判 4 态 Fidelity**：`full`（共享≈设计，意图全落地）/ `partial`（共享<设计，部分缺失）/ `gap`（设计有实现无）/ `overflow`（实现有设计无）。
+4. **对抗验证**：对模糊判定派子代理复核（如 chat 域动作数比设计少但语义等价——对抗纠正 partial→full）。**对抗 verdict 是权威**，统计以它为准。
+5. **可视化（onepager 化）**：
+   - **漂移 Venne 图**：双圆交集=意图落地、左独=缺口（红）、右独=溢出（绿）
+   - **域级双栏条图**：每域设计数 vs 实现数并排，爆点（如进化 29→53）高亮
+   - **快照对比放 sub**：设计稿截图 vs 实现截图并排（base64 内联）**只放 sub-snapshots.html**，main 只放结论 + 每域链接——否则 main 膨胀到 MB 级违反法则 7
+6. **结论公式**：意图实现率（共享/设计总数）+ Fidelity 分布 + 一句定性（"演进非偏离" / "工程超越设计，需回写设计稿 N 条"）。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -99,6 +113,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 移动端宽度不破版（viewport meta + 窄屏可读）
 - [ ] 多页产物：已拆 main + subs，main < 50KB 且不内联 sub 内容
 - [ ] 改动预览（超长单文件/SPA）：冻结窄门条默认折叠 <40px；跳转支持子视图（切视图+轮询）；定位用闪烁+持久边框非 hash 锚点
+- [ ] 设计稿对比：按域提取两侧动作 → 4 态 Fidelity（full/partial/gap/overflow）→ 对抗验证 → Venne + 双栏条图；快照 base64 只放 sub
 
 ## 反模式（血泪教训）
 
@@ -111,6 +126,9 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 子视图改动只 `getElementById` → 视图未渲染找不到元素；要"切视图 + 轮询等待"
 - ❌ 改动定位依赖 `scrollIntoView` → fixed 布局下无效果；用闪烁 + 持久边框
 - ❌ 改动标在静态 HTML 上 → SPA 渲染后元素被重建，标记丢失；要标在渲染模板里
+- ❌ 对比设计稿/实现时数 selector 数量 → 数量由架构决定无意义；要测语义 Fidelity（4 态漂移）
+- ❌ 快照 base64 内联进 main → main 膨胀到 MB 级；快照只放 sub-snapshots，main 留结论 + 链接
+- ❌ 不做对抗验证直接下结论 → 模糊域误判（如 chat 语义等价被标 partial）；对抗 verdict 是权威
 
 ## 规则库（rules/）
 
