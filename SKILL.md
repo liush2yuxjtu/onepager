@@ -111,3 +111,16 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 子视图改动只 `getElementById` → 视图未渲染找不到元素；要"切视图 + 轮询等待"
 - ❌ 改动定位依赖 `scrollIntoView` → fixed 布局下无效果；用闪烁 + 持久边框
 - ❌ 改动标在静态 HTML 上 → SPA 渲染后元素被重建，标记丢失；要标在渲染模板里
+
+## 规则库（rules/）
+
+每条反模式背后都有带正反例的完整规则，按需读取 `rules/`：
+
+- `rules/_sections.md` — 5 大类索引（ia / interact / compose / changes / trust）
+- `rules/ia-verdict-first.md` · `ia-narrow-gateway.md` — 结论前置 / 窄网关不搬运
+- `rules/interact-interface.md` · `interact-action-loop.md` — 交互即接口 / 行动闭环
+- `rules/compose-main-subs.md` — main + subs 拆分省 token
+- `rules/changes-frozen-bar.md` · `changes-badge-in-template.md` · `changes-subview-jump.md` · `changes-flash-locate.md` · `changes-no-hash-anchor.md` — SPA 改动预览 5 条
+- `rules/trust-honest-auditable.md` — 诚实可审计
+
+规则格式：frontmatter（title/impact/tags）+ Incorrect/Correct 代码对照 + Why 说明。做对应场景时先读对应规则文件。
