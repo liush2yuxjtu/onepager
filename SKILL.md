@@ -25,6 +25,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 4. **行动闭环**：诊断必须带「行动」，行动可勾选、有进度、可一键复制为 Markdown（人把决策状态反馈回 agent 的窄门）。
 5. **诚实可审计**：标注采集命令 / 时间戳 / 来源；没问题就说没问题（"机器散热健康"），瞬时尖峰标注"非持续"。可复现才值得信任。
 6. **单文件自包含**：无 CDN、无构建步骤、离线可用、手机可看。交付物不绑架用户环境。
+7. **组合产物：main + subs，inline 链接省 token**：交付物需要多个页面时（如主报告 + 子报告 / 多 tab 数据看板 / 报告 + 附录），**不要把所有内容塞进一个超大 HTML**。分开生成：一个 `main.html`（结论前置 + 各 sub 的摘要行 + 链接/iframe）加多个 `sub-*.html`（每个自包含、可独立打开）。main 只放结论 + 窄网关，sub 才放全量证据。原因：单文件 >200KB 时，每次迭代 agent 都要重读/重写整份文件，token 成本爆炸、diff 难读、浏览器渲染卡顿；拆开后 main 始终轻量，只有打开对应 sub 才加载全量。
 
 ## 触发时机
 
@@ -57,6 +58,13 @@ compatibility: any environment where an AI agent can write a single self-contain
 ### 6. 标注来源与生命周期
 页脚必须标：来源项目名 + 绝对路径 + 会话 ID（Pi session 或生成者）；聚焦服务若起在后台，写明停止命令（如 `lsof -tiTCP:8791 -sTCP:LISTEN | xargs kill`）。
 
+### 7. 组合产物：main + subs 拆分
+产物预计超 200KB 或天然多页时：
+1. **拆**：把数据看板 / 明细附录 / 逐模块详情各自拆成独立 `sub-*.html`，每个遵守法则 1-6，自包含可独立打开。
+2. **main 只留窄门**：`main.html` = 结论前置 + 每个 sub 一行摘要 + `<details>`/链接/`<iframe src="sub-x.html">` 按需加载，绝不内联 sub 内容。
+3. **链接用相对路径**：`<a href="sub-x.html">` 或 `<iframe src="sub-x.html">`，离线可开。
+4. **验证**：每个 sub 独立打开 OK；main 单独打开 OK；main 体积 < 50KB。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -77,6 +85,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 页脚有来源项目 + 绝对路径 + 会话 ID
 - [ ] 后台服务有停止命令
 - [ ] 移动端宽度不破版（viewport meta + 窄屏可读）
+- [ ] 多页产物：已拆 main + subs，main < 50KB 且不内联 sub 内容
 
 ## 反模式（血泪教训）
 
