@@ -26,6 +26,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 5. **诚实可审计**：标注采集命令 / 时间戳 / 来源；没问题就说没问题（"机器散热健康"），瞬时尖峰标注"非持续"。可复现才值得信任。
 6. **单文件自包含**：无 CDN、无构建步骤、离线可用、手机可看。交付物不绑架用户环境。
 7. **组合产物：main + subs，inline 链接省 token**：交付物需要多个页面时（如主报告 + 子报告 / 多 tab 数据看板 / 报告 + 附录），**不要把所有内容塞进一个超大 HTML**。分开生成：一个 `main.html`（结论前置 + 各 sub 的摘要行 + 链接/iframe）加多个 `sub-*.html`（每个自包含、可独立打开）。main 只放结论 + 窄网关，sub 才放全量证据。原因：单文件 >200KB 时，每次迭代 agent 都要重读/重写整份文件，token 成本爆炸、diff 难读、浏览器渲染卡顿；拆开后 main 始终轻量，只有打开对应 sub 才加载全量。
+8. **改动预览 = 冻结窄门条 + 定位闪烁**：交付物要改动时（尤其是超长单 HTML / SPA 原型），在文件顶部注入一条**默认折叠的冻结顶栏**：一行结论（"本次 N 处改动"）+ 每处改动一个可点 tag（`NEW #chg-2`）。tag 即窄门：点 tag → 定位到改动处（闪烁 + 金色边框 + tag 变 active），点"展开 ▾"才显示完整详情（摘要行 + 跳转 → + 勾选 + 复制 MD）。默认折叠 = 不遮挡页面，评审只看增量；展开 = 完整行动闭环。
 
 ## 触发时机
 
@@ -33,6 +34,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - 用户要瘦身 / 重构一份臃肿的报告（此时默认走"保交互砍内容"路线）
 - 用户提到 窄门 / small interface / 最小必要信息
 - 刚产出的全量报告被用户否掉（"信息太多" / "失去交互"）——立刻用本法则重做
+- 用户要给超长单 HTML / SPA 原型做改动预览（"改了哪" / "怎么预览变更"）——用改动预览模式
 
 ## 工作流
 
@@ -65,6 +67,16 @@ compatibility: any environment where an AI agent can write a single self-contain
 3. **链接用相对路径**：`<a href="sub-x.html">` 或 `<iframe src="sub-x.html">`，离线可开。
 4. **验证**：每个 sub 独立打开 OK；main 单独打开 OK；main 体积 < 50KB。
 
+### 8. 超长单 HTML / SPA 的改动预览
+交付物是超长单文件（>200KB 或 SPA hash 路由）时，改动预览这样做：
+
+1. **注入冻结窄门条**：文件 `<body>` 后插入固定顶栏，默认折叠成一行：`▣ N 处改动 + [tag#chg-1][tag#chg-2]... + 展开 ▾`。高度 <40px 不遮挡页面。
+2. **改动处打锚点**：每处改动在**渲染模板里**（SPA 是 JS 模板字符串，不是静态 HTML）加 `<em id="chg-N" class="chg-badge">徽章</em>` + 徽章文本（NEW/CHANGED/版本号）。改渲染函数 = 视图切换后徽章才出现，符合"元素在子视图里"的真实场景。
+3. **跳转 = 切视图 + 轮询 + 定位**：SPA 子视图改动在路由切换后才渲染，**不能只用 `getElementById`**。逻辑：先查元素 → 不存在则按映射（chg-4→experts 视图）点对应导航 → 轮询等待（150ms×30）→ 渲染后 `scrollIntoView` + 闪烁动画 + 金色边框 + tag 变 active。
+4. **定位反馈不依赖滚动**：fixed 布局/侧边栏元素本来就在视口内，`scrollIntoView` 无效——用**闪烁 + 持久金色边框**（`.chg-located` 保留到下次跳转）做视觉定位，切换目标时自动清除上一个。
+5. **避开 SPA 路由劫持**：hash 路由应用会拦截 `<a href="#chg-1">` 把 hash 改写成业务路由——跳转一律用 `href="javascript:void(0)"` + JS `scrollIntoView`，**不用 hash 锚点**。
+6. **行动闭环**：展开详情 = 每处一行摘要（原→新）+ 勾选 + 复制 Markdown 清单回传设计者。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -86,6 +98,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 后台服务有停止命令
 - [ ] 移动端宽度不破版（viewport meta + 窄屏可读）
 - [ ] 多页产物：已拆 main + subs，main < 50KB 且不内联 sub 内容
+- [ ] 改动预览（超长单文件/SPA）：冻结窄门条默认折叠 <40px；跳转支持子视图（切视图+轮询）；定位用闪烁+持久边框非 hash 锚点
 
 ## 反模式（血泪教训）
 
@@ -93,3 +106,8 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 全量表格默认平铺 20 行 × 6 列 → 搬运上下文
 - ❌ 为了显得有用夸大结论（"机器快坏了！"）→ 毁信任
 - ❌ 交互做装饰不做接口（动画很多，却没法聚焦真实窗口 / 复制结果）
+- ❌ 改动预览条默认展开占半屏 → 遮挡页面；应默认折叠成一行 tag
+- ❌ SPA 改动跳转用 `<a href="#chg-1">` → 被 hash 路由劫持（URL 变 `#/chat`），跳转失效；用 `javascript:void(0)` + JS 定位
+- ❌ 子视图改动只 `getElementById` → 视图未渲染找不到元素；要"切视图 + 轮询等待"
+- ❌ 改动定位依赖 `scrollIntoView` → fixed 布局下无效果；用闪烁 + 持久边框
+- ❌ 改动标在静态 HTML 上 → SPA 渲染后元素被重建，标记丢失；要标在渲染模板里

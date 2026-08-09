@@ -18,6 +18,12 @@
       "prompt": "帮我做一份 MySQL 慢查询性能诊断报告（虚构数据即可）。数据量很大：Top 20 慢 SQL 明细、每条的执行计划分析、索引建议、周趋势图表、还有一份给 DBA 的行动清单。内容太多一个页面装不下，我想先看总结论，然后按需点开每个部分的详细内容。请生成完整的 HTML 交付物。",
       "expected_output": "A multi-page HTML deliverable: a lightweight main.html with verdict-first + one-line summary per section + links/iframes to sub pages; separate sub HTML files (one per section: top-sql detail, execution plans, index advice, trend charts, action checklist), each self-contained and independently openable; relative-path links so it works offline; main stays lean (<50KB), sub content NOT inlined into main. Saved to outputs/.",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "我手上有一个设计师交付的 500KB 单文件 SPA 原型（hash 路由，三个导航视图 chat/experts/projects，fixed 侧边栏布局），我改了 4 处：① 侧边栏 AI 对话导航加 NEW 徽章 ② 品牌区加版本号 ③ 专家团视图里「供应链经营总控」卡片加新技能徽章 ④ 项目组视图里「Q3 交付保障」卡片加里程碑徽章。请给这个原型做一个改动预览：打开文件先看到改动总览，点击任意一处能定位到改动处（包括需要先切换视图的子视图改动），评审可以勾选确认并复制 Markdown 清单。",
+      "expected_output": "A changes-preview injected into the single-file SPA: (1) a fixed top bar, default collapsed to a single slim row (<40px) with verdict 'N 处改动' + one clickable tag per change; expandable to show detail rows with summary + jump link + checkbox + copy-markdown; (2) each change marked with id=chg-N badge in the RENDER TEMPLATE (not static HTML) so it survives view switching; (3) jump logic handles sub-view changes: if element not present, click the corresponding nav (experts/projects), poll-wait for render (150ms interval), then locate; (4) locating uses flash animation + persistent outline (chg-located), NOT hash anchors (avoid SPA route hijack) and NOT relying on scrollIntoView alone; (5) switching target clears previous locate state; (6) zero console errors, original nav switching still works.",
+      "files": []
     }
   ]
 }
