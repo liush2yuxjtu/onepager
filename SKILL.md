@@ -28,6 +28,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 7. **组合产物：main + subs，inline 链接省 token**：交付物需要多个页面时（如主报告 + 子报告 / 多 tab 数据看板 / 报告 + 附录），**不要把所有内容塞进一个超大 HTML**。分开生成：一个 `main.html`（结论前置 + 各 sub 的摘要行 + 链接/iframe）加多个 `sub-*.html`（每个自包含、可独立打开）。main 只放结论 + 窄网关，sub 才放全量证据。原因：单文件 >200KB 时，每次迭代 agent 都要重读/重写整份文件，token 成本爆炸、diff 难读、浏览器渲染卡顿；拆开后 main 始终轻量，只有打开对应 sub 才加载全量。
 8. **改动预览 = 冻结窄门条 + 定位闪烁**：交付物要改动时（尤其是超长单 HTML / SPA 原型），在文件顶部注入一条**默认折叠的冻结顶栏**：一行结论（"本次 N 处改动"）+ 每处改动一个可点 tag（`NEW #chg-2`）。tag 即窄门：点 tag → 定位到改动处（闪烁 + 金色边框 + tag 变 active），点"展开 ▾"才显示完整详情（摘要行 + 跳转 → + 勾选 + 复制 MD）。默认折叠 = 不遮挡页面，评审只看增量；展开 = 完整行动闭环。
 9. **设计稿 vs WebApp = 漂移基准，不是数 selector**：对比设计稿（意图）与实现（交付）时，**不要数 selector/动作数量**（数量由架构决定，无意义）。要测**语义 Fidelity**——逐域分类 4 态：`full`（意图全落地）/ `partial`（部分落地）/ `gap`（设计有、实现无）/ `overflow`（实现有、设计未规划）。结论用分布 + 意图实现率（如 92% 123/133），并标注"溢出 ≠ 偏离"（工程超越设计）。方法：按域提取两侧动作集 → 求共享/独有 → 逐域判 4 态 → 对抗验证（子代理复核，纠正误判，如 chat 实为 full 非 partial）。
+10. **SVG/图片 = 内联默认，子产物必须可见**：交付物里的所有 SVG（hero/品牌图/图标/装饰）一律内联进 HTML——`<svg>` 标签直接写入（可随主题配色、可交互）或 `data:image/svg+xml;utf8,` URI；图片（PNG/JPG 截图）用 base64 data URI 内联进对应的那个 HTML。**绝不允许 `<img src="hero.svg">` 外链文件**：法则 6 的"单文件自包含、离线可用"是承诺，外链文件一搬移、一离线、一换目录就破图。同理，**生成一个独立 .svg/.png 文件 ≠ 交付**——用户看不到"藏在 assets 目录里的下载链接"，子产物必须要么内联进 HTML 直接渲染，要么在交付汇报里逐条列出文件路径 + 打开方式。
 
 ## 触发时机
 
@@ -91,6 +92,13 @@ compatibility: any environment where an AI agent can write a single self-contain
    - **快照对比放 sub**：设计稿截图 vs 实现截图并排（base64 内联）**只放 sub-snapshots.html**，main 只放结论 + 每域链接——否则 main 膨胀到 MB 级违反法则 7
 6. **结论公式**：意图实现率（共享/设计总数）+ Fidelity 分布 + 一句定性（"演进非偏离" / "工程超越设计，需回写设计稿 N 条"）。
 
+### 10. 资产内联与子产物交付
+产物含 SVG/图片时（hero、品牌图、截图、图表素材）：
+1. **SVG 内联**：hero/图标/装饰一律内联 `<svg>` 标签（可随 CSS 主题配色、可交互）；确需 URI 时用 `data:image/svg+xml;utf8,`（注意 URL 编码 `#`→`%23` 等）。
+2. **图片内联**：PNG/JPG ≤100KB 直接 base64 data URI 内联；更大的截图类图片内联进**对应 sub 页面**（法则 7），main 只留链接/iframe——否则 main 膨胀违反法则 7。
+3. **交付汇报列全产物清单**：产物含任何图片/SVG 时，最终汇报**必须逐条列出全部产物文件绝对路径**（main + subs + 生成过程中的独立资产文件），并声明内联状态（如"hero SVG 已内联，页面无外链资源"）。只报"主 HTML 路径"、让子产物藏在目录里 = 用户看不到 = 交付失败。
+4. **验证无外链**：产物内 `grep -cE '<img[^>]+src="(?!data:)' file` 应为 0；或浏览器打开后 Network 面板无资源请求/无 404。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -114,6 +122,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 多页产物：已拆 main + subs，main < 50KB 且不内联 sub 内容
 - [ ] 改动预览（超长单文件/SPA）：冻结窄门条默认折叠 <40px；跳转支持子视图（切视图+轮询）；定位用闪烁+持久边框非 hash 锚点
 - [ ] 设计稿对比：按域提取两侧动作 → 4 态 Fidelity（full/partial/gap/overflow）→ 对抗验证 → Venne + 双栏条图；快照 base64 只放 sub
+- [ ] SVG/图片全部内联（无 `<img src="*.svg">` / `*.png` 外链）；交付汇报已列出全部产物文件路径 + 内联声明
 
 ## 反模式（血泪教训）
 
@@ -129,6 +138,8 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 对比设计稿/实现时数 selector 数量 → 数量由架构决定无意义；要测语义 Fidelity（4 态漂移）
 - ❌ 快照 base64 内联进 main → main 膨胀到 MB 级；快照只放 sub-snapshots，main 留结论 + 链接
 - ❌ 不做对抗验证直接下结论 → 模糊域误判（如 chat 语义等价被标 partial）；对抗 verdict 是权威
+- ❌ 生成 `<img src="hero.svg">` 外链文件 → 单文件自包含被破坏（搬移/离线即破图）；应内联 `<svg>` 或 data URI
+- ❌ 交付汇报只给"主 HTML 路径"，SVG/图片子产物藏在 assets 目录不列清单 → 用户看不到子产物；必须逐条列出全部产物文件 + 内联声明
 
 ## 规则库（rules/）
 
@@ -137,7 +148,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - `rules/_sections.md` — 5 大类索引（ia / interact / compose / changes / trust）
 - `rules/ia-verdict-first.md` · `ia-narrow-gateway.md` — 结论前置 / 窄网关不搬运
 - `rules/interact-interface.md` · `interact-action-loop.md` — 交互即接口 / 行动闭环
-- `rules/compose-main-subs.md` — main + subs 拆分省 token
+- `rules/compose-main-subs.md` · `rules/compose-inline-assets.md` — main + subs 拆分省 token / SVG·图片内联默认
 - `rules/changes-frozen-bar.md` · `changes-badge-in-template.md` · `changes-subview-jump.md` · `changes-flash-locate.md` · `changes-no-hash-anchor.md` — SPA 改动预览 5 条
 - `rules/trust-honest-auditable.md` — 诚实可审计
 
