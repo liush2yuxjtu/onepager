@@ -29,6 +29,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 8. **改动预览 = 冻结窄门条 + 定位闪烁**：交付物要改动时（尤其是超长单 HTML / SPA 原型），在文件顶部注入一条**默认折叠的冻结顶栏**：一行结论（"本次 N 处改动"）+ 每处改动一个可点 tag（`NEW #chg-2`）。tag 即窄门：点 tag → 定位到改动处（闪烁 + 金色边框 + tag 变 active），点"展开 ▾"才显示完整详情（摘要行 + 跳转 → + 勾选 + 复制 MD）。默认折叠 = 不遮挡页面，评审只看增量；展开 = 完整行动闭环。
 9. **设计稿 vs WebApp = 漂移基准，不是数 selector**：对比设计稿（意图）与实现（交付）时，**不要数 selector/动作数量**（数量由架构决定，无意义）。要测**语义 Fidelity**——逐域分类 4 态：`full`（意图全落地）/ `partial`（部分落地）/ `gap`（设计有、实现无）/ `overflow`（实现有、设计未规划）。结论用分布 + 意图实现率（如 92% 123/133），并标注"溢出 ≠ 偏离"（工程超越设计）。方法：按域提取两侧动作集 → 求共享/独有 → 逐域判 4 态 → 对抗验证（子代理复核，纠正误判，如 chat 实为 full 非 partial）。
 10. **SVG/图片 = 内联默认，子产物必须可见**：交付物里的所有 SVG（hero/品牌图/图标/装饰）一律内联进 HTML——`<svg>` 标签直接写入（可随主题配色、可交互）或 `data:image/svg+xml;utf8,` URI；图片（PNG/JPG 截图）用 base64 data URI 内联进对应的那个 HTML。**绝不允许 `<img src="hero.svg">` 外链文件**：法则 6 的"单文件自包含、离线可用"是承诺，外链文件一搬移、一离线、一换目录就破图。同理，**生成一个独立 .svg/.png 文件 ≠ 交付**——用户看不到"藏在 assets 目录里的下载链接"，子产物必须要么内联进 HTML 直接渲染，要么在交付汇报里逐条列出文件路径 + 打开方式。
+11. **先收集会话子产物，再写 main**：生成 onepager 前，主动扫描本次聊天消息、工具输出和已知产物目录里的 artifact 路径/URL；去重并验证本地文件存在或 URL 可访问。main 必须提供每个有效子产物的可见入口：HTML 用链接或按需 `<iframe>`，图片用预览，音视频用 `<audio>`/`<video>`，JSON/ZIP/Trace 等用带类型和用途的下载链接。大媒体保留相对文件引用，不做 base64；成功结果与失败证据同等收集，不能只展示最终成功产物。
 
 ## 触发时机
 
@@ -99,6 +100,14 @@ compatibility: any environment where an AI agent can write a single self-contain
 3. **交付汇报列全产物清单**：产物含任何图片/SVG 时，最终汇报**必须逐条列出全部产物文件绝对路径**（main + subs + 生成过程中的独立资产文件），并声明内联状态（如"hero SVG 已内联，页面无外链资源"）。只报"主 HTML 路径"、让子产物藏在目录里 = 用户看不到 = 交付失败。
 4. **验证无外链**：产物内 `grep -cE '<img[^>]+src="(?!data:)' file` 应为 0；或浏览器打开后 Network 面板无资源请求/无 404。
 
+### 11. 会话子产物发现与链接内联
+生成 main 前执行一次会话级 artifact inventory：
+1. **发现**：扫描本次聊天消息、工具输出、打开/生成记录中的绝对路径、相对路径和 `http(s)` URL；必要时只在已知 artifact 目录浅层列举，禁止无边界全盘搜索。
+2. **归一与验证**：解析相对路径到交付目录，按规范路径/URL 去重；本地用文件存在性检查，URL 用可用的只读请求验证。无效项保留在“缺失证据”说明中，不渲染死链接。
+3. **按类型呈现**：HTML/PDF/JSON/ZIP/Trace 提供命名链接；小图片按法则 10 内联；大图片放 sub；音视频在 main 或对应 sub 直接渲染播放器并保留下载链接。视频等大文件使用同目录相对引用，避免 base64 膨胀。
+4. **完整性优先**：同时收集最终结果、原始素材、机器校验、Trace、失败录像/日志；失败证据放 `<details>`，不得因结论成功而省略。
+5. **交付清单**：最终汇报逐条列出 main、subs、媒体、数据、Trace 和失败证据的绝对路径或 URL，并注明“内联预览 / 相对引用 / 下载链接 / 缺失”。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -123,6 +132,9 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 改动预览（超长单文件/SPA）：冻结窄门条默认折叠 <40px；跳转支持子视图（切视图+轮询）；定位用闪烁+持久边框非 hash 锚点
 - [ ] 设计稿对比：按域提取两侧动作 → 4 态 Fidelity（full/partial/gap/overflow）→ 对抗验证 → Venne + 双栏条图；快照 base64 只放 sub
 - [ ] SVG/图片全部内联（无 `<img src="*.svg">` / `*.png` 外链）；交付汇报已列出全部产物文件路径 + 内联声明
+- [ ] 已扫描本次会话的 artifact 路径/URL，去重并验证；main 有全部有效子产物入口
+- [ ] 音视频可直接预览且保留下载链接；大文件使用相对引用，不做 base64
+- [ ] 最终结果、机器校验、Trace、原始素材和失败证据均已纳入清单；死链接已标为缺失
 
 ## 反模式（血泪教训）
 
@@ -140,6 +152,8 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 不做对抗验证直接下结论 → 模糊域误判（如 chat 语义等价被标 partial）；对抗 verdict 是权威
 - ❌ 生成 `<img src="hero.svg">` 外链文件 → 单文件自包含被破坏（搬移/离线即破图）；应内联 `<svg>` 或 data URI
 - ❌ 交付汇报只给"主 HTML 路径"，SVG/图片子产物藏在 assets 目录不列清单 → 用户看不到子产物；必须逐条列出全部产物文件 + 内联声明
+- ❌ 只链接用户点名的最终文件，不扫描会话里已生成的 report/JSON/Trace/媒体/失败证据 → main 不是会话入口；生成前先做 artifact inventory
+- ❌ 把大型 WebM/MP4 base64 塞进 main → 文件暴涨且难迭代；用同目录相对引用 + 原生播放器 + 下载链接
 
 ## 规则库（rules/）
 
