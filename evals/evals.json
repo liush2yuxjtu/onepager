@@ -5,25 +5,59 @@
       "id": 1,
       "prompt": "我的 mac 最近太热了，风扇声音很大。帮我诊断一下发热原因，并生成一个交互式 HTML 报告：要能看到最占资源的进程、能按 CPU 排序、能搜索进程名，还要有一个可以勾选和复制成 markdown 的行动清单。注意信息不要一次全铺出来，结论要一眼看到。",
       "expected_output": "A single self-contained interactive HTML file: verdict-first line under title, searchable + sortable process table, checkable action list with copy-to-markdown button, evidence collapsed or on-demand, provenance footer. Saved to outputs/.",
-      "files": []
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with no external <script>/<link> resources",
+        "The page shows a verdict-first line directly under the title, before any tables",
+        "The process table is searchable via an input that filters rows",
+        "The process table columns are sortable by clicking headers",
+        "There is a checkable action checklist with a copy-to-markdown button",
+        "Evidence/details sections are collapsed or loaded on demand, not all expanded at once",
+        "A provenance footer records source and generation info"
+      ]
     },
     {
       "id": 2,
       "prompt": "我上个月做的项目验收报告 HTML 太臃肿了，一个页面有 6 个大 tab、每 tab 都是几十行表格，评审说看不动。帮我把这份报告重做成一个精炼的交互式单页：结论放最上面，细节折叠起来，但搜索、筛选、可点击的条目、勾选清单这些交互一个都不能丢。",
       "expected_output": "A redesigned single-page HTML: one-line verdict first, details behind collapsible sections or on-demand filters, ALL interactive affordances preserved (search / sort / clickable rows / checklist / copy), self-contained. Saved to outputs/.",
-      "files": []
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file",
+        "The first visible content is a one-line verdict, not a table",
+        "Bulk detail content sits behind collapsible sections or on-demand filters",
+        "Search, sort, clickable rows, checklist, and copy affordances all still function",
+        "No section renders its full data table expanded on page load"
+      ]
     },
     {
       "id": 3,
       "prompt": "帮我做一份 MySQL 慢查询性能诊断报告（虚构数据即可）。数据量很大：Top 20 慢 SQL 明细、每条的执行计划分析、索引建议、周趋势图表、还有一份给 DBA 的行动清单。内容太多一个页面装不下，我想先看总结论，然后按需点开每个部分的详细内容。请生成完整的 HTML 交付物。",
       "expected_output": "A multi-page HTML deliverable: a lightweight main.html with verdict-first + one-line summary per section + links/iframes to sub pages; separate sub HTML files (one per section: top-sql detail, execution plans, index advice, trend charts, action checklist), each self-contained and independently openable; relative-path links so it works offline; main stays lean (<50KB), sub content NOT inlined into main. Saved to outputs/.",
-      "files": []
+      "files": [],
+      "expectations": [
+        "Output produces a main.html plus multiple sub-*.html files, not one monolith",
+        "main.html is verdict-first with a one-line summary per section",
+        "main.html references sub pages via relative-path links or iframes",
+        "Each sub HTML is self-contained and independently openable",
+        "main.html stays under 50KB and does not inline sub content",
+        "Opening the deliverable offline from a local folder shows all pages"
+      ]
     },
     {
       "id": 4,
       "prompt": "我手上有一个设计师交付的 500KB 单文件 SPA 原型（hash 路由，三个导航视图 chat/experts/projects，fixed 侧边栏布局），我改了 4 处：① 侧边栏 AI 对话导航加 NEW 徽章 ② 品牌区加版本号 ③ 专家团视图里「供应链经营总控」卡片加新技能徽章 ④ 项目组视图里「Q3 交付保障」卡片加里程碑徽章。请给这个原型做一个改动预览：打开文件先看到改动总览，点击任意一处能定位到改动处（包括需要先切换视图的子视图改动），评审可以勾选确认并复制 Markdown 清单。",
       "expected_output": "A changes-preview injected into the single-file SPA: (1) a fixed top bar, default collapsed to a single slim row (<40px) with verdict 'N 处改动' + one clickable tag per change; expandable to show detail rows with summary + jump link + checkbox + copy-markdown; (2) each change marked with id=chg-N badge in the RENDER TEMPLATE (not static HTML) so it survives view switching; (3) jump logic handles sub-view changes: if element not present, click the corresponding nav (experts/projects), poll-wait for render (150ms interval), then locate; (4) locating uses flash animation + persistent outline (chg-located), NOT hash anchors (avoid SPA route hijack) and NOT relying on scrollIntoView alone; (5) switching target clears previous locate state; (6) zero console errors, original nav switching still works.",
-      "files": []
+      "files": [],
+      "expectations": [
+        "The SPA has a fixed changes bar, default collapsed to one slim row under 40px tall",
+        "Collapsed bar shows 'N 处改动' verdict plus one clickable tag per change",
+        "Expanded bar shows per-change rows with summary + jump link + checkbox + copy-markdown",
+        "Each change is marked with an id=chg-N badge injected in the render template, surviving view switching",
+        "Jumping to a change in another sub-view clicks the nav and waits for render before locating",
+        "Locating uses flash animation + persistent outline, not hash anchors or scrollIntoView alone",
+        "Switching target clears the previous locate highlight",
+        "Original nav switching still works with zero console errors"
+      ]
     },
     {
       "id": 5,
