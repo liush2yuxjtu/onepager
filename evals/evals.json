@@ -24,6 +24,96 @@
       "prompt": "我手上有一个设计师交付的 500KB 单文件 SPA 原型（hash 路由，三个导航视图 chat/experts/projects，fixed 侧边栏布局），我改了 4 处：① 侧边栏 AI 对话导航加 NEW 徽章 ② 品牌区加版本号 ③ 专家团视图里「供应链经营总控」卡片加新技能徽章 ④ 项目组视图里「Q3 交付保障」卡片加里程碑徽章。请给这个原型做一个改动预览：打开文件先看到改动总览，点击任意一处能定位到改动处（包括需要先切换视图的子视图改动），评审可以勾选确认并复制 Markdown 清单。",
       "expected_output": "A changes-preview injected into the single-file SPA: (1) a fixed top bar, default collapsed to a single slim row (<40px) with verdict 'N 处改动' + one clickable tag per change; expandable to show detail rows with summary + jump link + checkbox + copy-markdown; (2) each change marked with id=chg-N badge in the RENDER TEMPLATE (not static HTML) so it survives view switching; (3) jump logic handles sub-view changes: if element not present, click the corresponding nav (experts/projects), poll-wait for render (150ms interval), then locate; (4) locating uses flash animation + persistent outline (chg-located), NOT hash anchors (avoid SPA route hijack) and NOT relying on scrollIntoView alone; (5) switching target clears previous locate state; (6) zero console errors, original nav switching still works.",
       "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "为这次会话做一个交互式 Onepager recap。聊天记录明确提到本次 fresh UAT 生成了 report.html、qa.json、run.webm、trace.zip；这些文件都在输入目录。请不要等我逐个点名，主动归集本次会话产物，并把重要产物直接放进主页面。来源项目绝对路径写 /tmp/pitch-video-project，Pi session ID 写 eval-session-5。",
+      "expected_output": "A main session recap HTML that proactively discovers the four evidenced artifacts, directly links all of them, and visibly embeds the primary video player outside collapsed details.",
+      "files": [
+        "evals/files/session-artifacts/report.html",
+        "evals/files/session-artifacts/qa.json",
+        "evals/files/session-artifacts/run.webm",
+        "evals/files/session-artifacts/trace.zip"
+      ],
+      "expectations": [
+        "The main HTML contains direct links to report.html, qa.json, run.webm, and trace.zip using real relative paths.",
+        "The primary video run.webm is visible in the main body through a video element with controls and is not only inside a details element.",
+        "The output does not invent links or include unrelated artifacts that were not provided by the prompt or fixture directory.",
+        "The page includes source project absolute path and a Pi session ID in its footer."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "请把本次调试会话总结成 onepager。当前聊天提到两个视频：最终成功录像 run.webm 和失败证据 failure.webm，还有最终报告 report.html。它们位于输入目录；hero.svg 是页面素材。主页面应让我一眼看到最终录像和所有会话产物入口，不要把视频只藏在“证据”折叠区。来源项目绝对路径 /tmp/debug-session，session ID eval-session-6。",
+      "expected_output": "A recap with a visible primary run.webm player, direct entries for both videos and report, and hero.svg rendered inline rather than treated as an unrelated session deliverable.",
+      "files": [
+        "evals/files/session-artifacts/run.webm",
+        "evals/files/session-artifacts/failure.webm",
+        "evals/files/session-artifacts/report.html",
+        "evals/files/session-artifacts/hero.svg"
+      ],
+      "expectations": [
+        "The primary video run.webm is visible in the main body through a video element with controls and is not only inside a details element.",
+        "The main HTML directly links both run.webm and failure.webm and report.html, while hero.svg is inline or used as page artwork rather than omitted silently.",
+        "The output does not invent links or include unrelated artifacts that were not provided by the prompt or fixture directory.",
+        "The page includes source project absolute path and a Pi session ID in its footer."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "生成一个本次会话 handoff Onepager。聊天只确认产物 qa.json；输入目录里还存在旧会话的 failure.webm，但聊天没有把它归属到当前会话。请主动收集有证据的当前会话产物，同时避免把目录里所有文件都塞进页面。来源项目绝对路径 /tmp/scoped-handoff，session ID eval-session-7。",
+      "expected_output": "A scoped handoff that links qa.json, does not include the unrelated failure.webm, and states the artifact set honestly.",
+      "files": [
+        "evals/files/session-artifacts/qa.json",
+        "evals/files/session-artifacts/failure.webm"
+      ],
+      "expectations": [
+        "The main HTML directly links qa.json.",
+        "The main HTML does not link or copy failure.webm because the prompt says it belongs to an old session.",
+        "The page does not invent any artifact URL or placeholder link.",
+        "The footer includes /tmp/scoped-handoff and eval-session-7."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Read the attached Pi transcript and create the requested session recap Onepager. Follow the transcript’s final user request.",
+      "expected_output": "Without being explicitly asked to collect artifacts, the recap discovers all session-produced outputs from the transcript, presents direct links, and makes the primary video visible.",
+      "files": [
+        "evals/files/implicit-rich/chat.md"
+      ],
+      "expectations": [
+        "The main HTML directly links report.html, qa.json, run.webm, and trace.zip using portable relative paths.",
+        "run.webm is rendered in a controls-enabled video player outside any details element.",
+        "The artifact links are visible in the main page rather than present only inside collapsed details.",
+        "The footer includes /tmp/pitch-video and implicit-session-8."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Read the attached Pi transcript and create the requested handoff Onepager. Follow the transcript’s final user request.",
+      "expected_output": "The recap proactively links current-report.html and current-qa.json but does not import the globally listed old-session video.",
+      "files": [
+        "evals/files/implicit-scoped/chat.md"
+      ],
+      "expectations": [
+        "The main HTML directly links current-report.html and current-qa.json.",
+        "The output does not link or copy old-failure.webm.",
+        "The artifact links are visible in the main page rather than present only inside collapsed details.",
+        "The footer includes /tmp/scoped-recap and implicit-session-9."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Read the attached Pi transcript and create the requested concise session recap Onepager. Follow the transcript’s final user request.",
+      "expected_output": "The recap explicitly states that no independent sub-artifacts were produced instead of silently omitting the artifact gateway or inventing links.",
+      "files": [
+        "evals/files/implicit-empty/chat.md"
+      ],
+      "expectations": [
+        "The main HTML explicitly states that this session produced no independent sub-artifacts.",
+        "The main HTML contains no artifact download or placeholder links.",
+        "The footer includes /tmp/no-artifacts and implicit-session-10."
+      ]
     }
   ]
 }
