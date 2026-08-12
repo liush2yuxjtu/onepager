@@ -148,6 +148,74 @@
         "The main HTML contains no artifact download or placeholder links.",
         "The footer includes /tmp/no-artifacts and implicit-session-10."
       ]
+    },
+    {
+      "id": 11,
+      "prompt": "为一个 AI 专家 WebApp 做一份 onepager，说明它有两种使用路径：路径 A 用 GUI 表单驱动（表单阶段零后端调用、审阅按 Enter 才执行、发布后走专家 API），路径 B 直接与 expert-creator / expert-fixer 专家纯对话（无表单、自然语言创建或改进技能）。两条路径最终都汇合到「已发布专家 + evals 快照」。请给出单文件交互式 HTML，用内联 SVG 把两条路径都画出来，每条路径的界面 mock 卡片要标注路径徽标，并说明两条路径在表单/执行/发布环节的异同。",
+      "expected_output": "A single self-contained interactive HTML: an overview SVG showing both paths from a shared business need branching into path A (GUI form → review Enter → publish → POST /responses) and path B (pure chat with expert-creator / expert-fixer) converging on 'published expert + evals snapshot'; each screen mock card carries a path badge (A / B / A+B); a table contrasting the two paths on form stage, execution stage, and publish; all SVG inline, no external resources.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with no external script/link/img resources",
+        "An overview SVG branches a shared entry point into path A and path B and converges on published expert + evals snapshot",
+        "Each screen mock card is labeled with a path badge (A, B, or A+B)",
+        "A contrast table distinguishes the two paths on form stage (form vs chat), execution, and publish",
+        "All SVG is inline, with zero external assets"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "我的一份 onepager HTML 里的内联 SVG 只渲染出了最外层外框和标题，下面一大片区域全空白。代码里 SVG 的徽标用了 <span> 包裹、<text> 里还嵌了 <code>。请修复这个 HTML，让它整个 SVG 都正常渲染，并确保同类问题不再出现。",
+      "expected_output": "A fixed single-file HTML where the inline SVG renders completely: badge wrappers inside SVG use <g> instead of <span>, <text> content has no <code>/other HTML element inside it, no element in the SVG relies on HTML foreign-content mode. The full SVG (all paths, boxes, badges, arrows) is visible.",
+      "files": [],
+      "expectations": [
+        "The HTML contains no <span> or <code> element inside any <svg> block",
+        "Badge wrappers inside SVG use <g> elements",
+        "SVG <text> nodes contain plain text only, no nested HTML elements",
+        "The full SVG renders visibly (not just the outer box and title), verified via screenshot or pixel check",
+        "The file remains self-contained with zero external resources"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "为一个 AI 专家的完整生命周期做一份 onepager：创建（可用表单或用对话）→ 测试 → 发布（同时生成 evals 快照）→ 对话演进（expert-fixer 改进）→ 退出/归档。请生成单文件交互式 HTML，把整个生命周期用内联 SVG 画成一条带箭头的流程/泳道图，每个阶段节点要有阶段名和一句产物说明；再给一个可勾选、可复制成 Markdown 的行动清单。数据可用虚构。不要用 CDN 图表库。",
+      "expected_output": "A single self-contained interactive HTML where the expert lifecycle is drawn as an inline SVG flow/swimlane diagram (arrow-connected stages, each labeled with stage name + a one-line outcome annotation), plus a checkable copy-to-markdown action list; zero external resources. Discovered from today's real artifact expert-creator-improver-onepager.html which rendered this lifecycle as a text table with no SVG at all.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external script/link/img resources",
+        "The lifecycle is drawn as an inline SVG flow or swimlane diagram with arrow-connected stage nodes",
+        "Each SVG stage node carries a stage label and a short product/outcome annotation",
+        "A checkable action checklist with a copy-to-markdown button exists",
+        "No <span>/<div>/<code> element appears inside any <svg> block"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "我们 webapp 里接了一批 MCP 服务器，想知道它们和功能模块怎么连的。请用 onepager 把它们展示给我——用 SVG 画出来：每个 MCP 一个节点（标注名称、类型 stdio/SSE、用途），MCP 与 webapp 功能模块（如专家创建、技能进化、诊断）之间的调用关系用带箭头连线。单文件交互式 HTML，全部内联，离线可开。MCP 清单和调用关系可用虚构。",
+      "expected_output": "A single self-contained interactive HTML where an inline SVG draws MCP server nodes (name + type + purpose) and arrow edges connecting them to webapp feature-module nodes, preceded by a verdict-first summary line; zero external resources. Mirrors today's real user request 'where can we see the MCPs... onepager show me in SVG plz' which took 4 iterations (A->D) to get SVG-heavy output.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external script/link/img resources",
+        "An inline SVG renders each MCP as a labeled node carrying name, type, and purpose",
+        "SVG arrow edges connect MCP nodes to webapp feature-module nodes",
+        "The page leads with a verdict-first summary line before the diagram",
+        "No <span>/<div>/<code> inside any <svg> block"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "为一次专家生命周期测试做一份带证据的 onepager：每阶段有一张截图（在输入目录），页面要把每阶段截图作为可见证据展示，并给出阶段结论 + 可勾选复制 Markdown 的行动清单。关键约束：截图必须内联（≤100KB 用 base64 data URI），绝不能出现 <img src=\"*.png\"> 外链文件路径；页面必须单文件离线可开。",
+      "expected_output": "A single self-contained HTML where each lifecycle stage shows visible evidence (screenshots inlined as data URIs, or replaced by an inline SVG stage card), a one-line verdict per stage, and a checkable copy-to-markdown action list; zero external <img src> file references. Discovered from today's real artifact expert-lifespan-onepager.html which used 11 external <img src=\"expert-lifespan/*.png\"> file references.",
+      "files": [
+        "evals/files/expert-lifespan/01-create-form.png",
+        "evals/files/expert-lifespan/02-created-published.png"
+      ],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external <script>/<link> resources",
+        "No <img> tag uses a non-data: src (images are inlined or drawn as inline SVG)",
+        "Each lifecycle stage presents visible evidence plus a one-line verdict",
+        "A checkable action checklist with a copy-to-markdown button exists",
+        "If SVG is used for stage cards, no <span>/<div>/<code> appears inside it"
+      ]
     }
   ]
 }
