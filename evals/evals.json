@@ -216,6 +216,39 @@
         "A checkable action checklist with a copy-to-markdown button exists",
         "If SVG is used for stage cards, no <span>/<div>/<code> appears inside it"
       ]
+    },
+    {
+      "id": 16,
+      "prompt": "有个 CLI 部署工具，登录认证阶段经常要人工介入：要输云平台密码、填 API key（sk-... 格式）、输短信验证码（6 位），有时还要扫二维码（2FA）。这个环节老卡住——人不知道要填什么、格式是啥、code 从哪来、有没有过期。请做一个 onepager：结论先说认证卡在哪几处、缺什么；页面要有凭据输入框（密码 type=password 可切换明文、API key 单行、验证码 6 位，placeholder 写清格式，Enter 提交 + 支持粘贴）、二维码内联可见（data URI 或手写 SVG，带过期倒计时/刷新）、每项标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试；凭据默认遮蔽、页面零远程端点、复制后提示清剪贴板；凭据就绪状态可复制 Markdown 回传 agent。用内联 SVG 画认证流程。单文件自包含离线可开，来源项目 /tmp/deploy-cli，session eval-session-16。",
+      "expected_output": "A single self-contained interactive HTML for a HITL credential-entry (login/auth) flow: verdict-first on where auth is stuck and what's missing; credential input fields (password type=password with reveal toggle, API key single-line, 6-digit code — placeholder documents format, Enter submits, paste supported, format validation gives immediate feedback); QR code inline-visible (data URI or hand-written SVG) with expiry countdown/refresh; each credential item labels 在等什么/从哪拿/多久过期 + failure retry; credentials masked by default, page has zero remote endpoints, copy hints to clear clipboard; ready-state captured to copyable Markdown for the agent; an inline SVG draws the auth flow; zero external resources.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external <script>/<link>/<img src> resources",
+        "A password field uses type=password with a reveal/eye toggle, and API-key / code inputs have placeholders documenting the format (sk-... / 6 digits), Enter submits, and paste is supported",
+        "Input format validation gives immediate feedback (toast/inline) rather than silently swallowing bad input",
+        "Any QR code is inline-visible (data URI or hand-written SVG) in the main body with expiry countdown/refresh, not only inside a details element",
+        "Each credential item labels 在等什么 / 从哪拿 / 多久过期 plus failure-retry / expiry fallback — no silent indefinite wait",
+        "Credentials are masked by default, the page has zero remote endpoints, copy actions hint to clear the clipboard, and the footer states local-only usage",
+        "A verdict-first line states where auth is stuck and which credentials/fallbacks are missing",
+        "Ready/entered state is captured to a copyable Markdown result for feedback to the agent",
+        "An inline SVG draws the auth/credential flow (no external chart libraries)"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "有个工具登录要人工介入：有时候要输密码，有时候要填 key，有时候要输验证码，有时候还要扫码。每次都卡在不知道填什么。给我做个 onepager 看看这个认证流程。单文件离线可开，来源 /tmp/deploy-cli，session eval-session-17。",
+      "expected_output": "A single self-contained interactive HTML diagnosing a login/auth flow that needs human credential entry (password / API key / code / QR). Crucially the prompt does NOT enumerate any requirements, so the page must proactively provide: masked credential inputs (password type=password with reveal, key/code with format placeholders, Enter + paste), an inline-visible QR (data URI or hand-written SVG) where scanning applies, per-item waiting labels (在等什么/从哪拿/多久过期) with expiry fallback, zero remote endpoints with masked-by-default secrets, and a copyable Markdown ready-state for the agent — the credential-entry affordances appear even though the user never named them.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external <script>/<link>/<img src> resources",
+        "The page proactively includes masked credential input fields (type=password with reveal toggle; key/code inputs with format placeholders) despite the prompt never naming an input",
+        "The page proactively includes an inline-visible QR (data URI or hand-written SVG) for scanning, despite the prompt never naming QR",
+        "Each credential item labels 在等什么 / 从哪拿 / 多久过期 with failure-retry / expiry fallback rather than an indefinite wait",
+        "Credentials are masked by default and the page has zero remote endpoints (secrets not shipped to any server)",
+        "A verdict-first line explains what's stuck and what's needed to proceed",
+        "Ready/entered state is captured/copyable as Markdown for feedback to the agent",
+        "An inline SVG draws the auth flow with no external chart libraries"
+      ]
     }
   ]
 }

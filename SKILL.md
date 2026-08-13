@@ -11,6 +11,10 @@ description: >-
   reacts with "this is not what we want" / "we lost the interactivity" — that reaction is the signal that
   Onepager was needed from the start: keep the interactions (search / sort / focus / check / copy),
   pass only minimal tokens through each gateway, never strip interactivity while slimming content.
+  Also use it for HITL (human-in-the-loop) credential-entry pages: the user must enter a password / API key /
+  auth token / 2FA code or scan a QR code before the flow can continue. The page must give masked secret inputs,
+  an inline-visible QR, copy/paste affordances, and show exactly what's waiting — so the human↔agent loop never
+  dead-ends on a missing secret.
 compatibility: any environment where an AI agent can write a single self-contained HTML file and optionally run local CLI commands to wire real-window focus links.
 ---
 
@@ -32,6 +36,8 @@ compatibility: any environment where an AI agent can write a single self-contain
 10. **设计稿 vs WebApp = 漂移基准，不是数 selector**：对比设计稿（意图）与实现（交付）时，**不要数 selector/动作数量**（数量由架构决定，无意义）。要测**语义 Fidelity**——逐域分类 4 态：`full`（意图全落地）/ `partial`（部分落地）/ `gap`（设计有、实现无）/ `overflow`（实现有、设计未规划）。结论用分布 + 意图实现率（如 92% 123/133），并标注"溢出 ≠ 偏离"（工程超越设计）。方法：按域提取两侧动作集 → 求共享/独有 → 逐域判 4 态 → 对抗验证（子代理复核，纠正误判，如 chat 实为 full 非 partial）。
 11. **SVG/图片 = 内联默认，子产物必须可见**：交付物里的所有 SVG（hero/品牌图/图标/装饰）一律内联进 HTML——`<svg>` 标签直接写入（可随主题配色、可交互）或 `data:image/svg+xml;utf8,` URI；图片（PNG/JPG 截图）用 base64 data URI 内联进对应的那个 HTML。**绝不允许 `<img src="hero.svg">` 外链文件**：法则 6 的"单文件自包含、离线可用"是承诺，外链文件一搬移、一离线、一换目录就破图。同理，**生成一个独立 .svg/.png 文件 ≠ 交付**——用户看不到"藏在 assets 目录里的下载链接"，子产物必须要么内联进 HTML 直接渲染，要么在交付汇报里逐条列出文件路径 + 打开方式。
 12. **SVG = 主动绘制数据与界面，不只是内联既有资产**：只要内容有形状就**主动手写内联 `<svg>` 画出来**，而不是只堆 HTML 表格或贴数字文本——(a) 数据有形状（占比/分布/趋势/流程/层级/对比/状态机）→ 环形/条/折线/sparkline/热力格/流程箭头图；(b) **界面/交互/流程/故事板/快照 → 直接画成内联 SVG 界面 mock**（窗口框、侧边栏、表单控件、气泡、按钮、状态灯都画出来），不要只给文字描述、表格或外链截图。"一图看形状、一眼抓异常"是比逐格读表更窄的门；"把界面画出来"是比读十行文字描述更窄的门。**别等用户追问"where is the visual SVG?"**——交付物只要在讲 UI/UX/流程/数据，默认就该有一张内联 SVG。原生 `<svg>` 手写 1-5KB 就够，**禁止为此引 chart.js / d3 / echarts 等 CDN 图表库**（违背法则 6 单文件自包含）。手写 SVG 的纪律（否则会翻车成"只渲染出最外层外框和标题、内部一大片空白"）：徽标/组合元素用 `<g>` 包裹，**SVG 内绝不用 `<span>`/`<div>`**；`<text>` 内只放纯文本，**不嵌 `<code>` 等 HTML 元素**（SVG 是 XML 命名空间，foreign HTML 不渲染）；坐标手算或用简单换算，别依赖浏览器布局。
+13. **HITL = 人机凭据窄门：密码 / 密钥 / 验证码 / 二维码，安全可复制不卡死**：交付物需要人类提供**凭据**才能继续（输密码 / 填 API key / 填 token / 输 2FA 验证码 / 扫二维码登录）时，页面就是人↔agent 的凭据通道，必须给**凭据输入框**、**安全显示**、**扫码/复制出口**。(a) 凭据输入框 = 最小输入窄门：密码用 `type="password"`（👁 明文/星号切换），API key / token / 验证码用单行输入，placeholder 写清格式（如 `sk-...`、6 位数字），Enter 提交、支持粘贴，格式校验失败给即时反馈不吞掉。(b) 二维码 = 内联可见：需要扫码的场景（OTP / 2FA / 设备绑定）把二维码**直接内联**（data URI 或手写 SVG 网格）在 main 正文可见可扫，附过期倒计时 / 刷新，不只藏 `<details>`——否则手机扫不到、单文件自包含被破。(c) 复制/粘贴出口 = 不卡死：secret 一键复制（点选 + clipboard 按钮），复制后提示清剪贴板；输入 / 粘贴 / 扫码任一可用即可继续，不依赖单一方式。(d) 卡住要可见：等待人类输凭据时标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试与过期兜底（重新生成 / 通知 / 离线通道），禁止静默挂起。(e) 安全纪律：secret 默认遮蔽、不落明文 DOM/日志，页面**零远程端点**（校验/复制全在本地 JS），页脚声明「凭据仅本机使用，不上传任何服务器」。
+14. **视觉密度与布局纪律 = 呼吸感，不靠堆叠**：交付物再功能完整，布局过密也会被判"乱"——**内容密度是布局层面第一红线**。多张并列卡（凭据门 / 指标卡 / 流程步骤）用**对称网格**（2×2 优先，`repeat(auto-fit,minmax(300px,1fr))` 会出 3+1 错落的不对称空洞，禁用）；结论条 / TL;DR 用**浅色卡片 + 主色左边框**（不要深色渐变巨块压住浅色页面）；每张卡内 8+ 层信息时加 padding、加大行距、统一字号层级（标题 16 / 正文 13 / 辅助 11-12），宁可加高页面也不要贴成一条。窄屏（<760px）网格降单列。**自查法**：截整页图看密度，或量"文本行距 vs 字号"——正文行距应 ≥1.5×、卡间距 ≥14px、左右留白 ≥10%。密度、对称、留白三件套做到位，页面"一眼不慌"。
 
 ## 触发时机
 
@@ -42,6 +48,7 @@ compatibility: any environment where an AI agent can write a single self-contain
 - 刚产出的全量报告被用户否掉（"信息太多" / "失去交互"）——立刻用本法则重做
 - 用户要给超长单 HTML / SPA 原型做改动预览（"改了哪" / "怎么预览变更"）——用改动预览模式
 - 用户要对比设计稿与实现（"benchmark design vs webapp" / "设计稿和实现差多少" / "selector 对比"）——用漂移基准
+- 用户要 HITL / 人工输密码 / 填 API key / 填 token / 输验证码 / 扫二维码 / "stuck waiting for human" / 凭据输入页——用 HITL 凭据模式（法则 13）
 
 ## 工作流
 
@@ -140,6 +147,20 @@ compatibility: any environment where an AI agent can write a single self-contain
 - 手写纪律：`<g>` 包裹徽标/组合元素；`<text>` 内纯文本；不用 `<span>`/`<div>`/`<code>` 进 SVG；坐标手算。犯这条 = 只出外框+标题、内部空白（eval 12 的血泪）。
 - 图表库禁令：不为此引任何 CDN（chart.js/d3/echarts）——法则 6 是硬约束，原生 `<svg>` 足够。
 
+### 13. HITL 凭据页面（人机凭据窄门）
+
+交付物需要人类提供凭据才能继续时（输密码 / 填 API key / 填 token / 输验证码 / 扫二维码），按凭据窄门模式做：
+
+1. **结论先讲卡在哪**：TL;DR 说明停在哪一步、缺哪个凭据、从哪能拿到。例："登录卡在第 2 步：需要人工输 6 位短信验证码，页面已备好输入框 + 过期倒计时，输完即继续。"
+2. **凭据输入框（窄门核心）**：密码 `type="password"` + 👁 明文/星号切换；API key / token / 验证码单行 `input`，placeholder 写清格式（`sk-...` / 6 位数字 / 形如 `xxxx-xxxx`），Enter 提交、支持粘贴（onpaste）。格式校验失败给即时反馈（toast/红框 + 提示），不吞输入。
+3. **二维码内联可见**：需要扫码（OTP / 2FA / 设备绑定）时把二维码直接内联——data URI（`<img src="data:image/...">`）或手写 `<svg>` 网格——放 main 正文可见可扫，附过期倒计时 + 刷新按钮；绝不外链二维码文件、绝不只藏 `<details>`（手机扫不到 = 卡死）。
+4. **复制/粘贴出口**：secret 一键复制（点选 + clipboard 按钮），复制后提示清剪贴板（1-2 分钟自动清或提示手动）；输入 / 粘贴 / 扫码任一通道可用即可继续。
+5. **状态可见**：每项等待态标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试说明；过期兜底（重新生成 / 通知 / 离线通道），禁止静默挂起。
+6. **安全纪律**：secret 默认遮蔽、不落明文 DOM/日志；页面**零远程端点**（校验/复制全在本地 JS）；页脚声明「凭据仅本机使用，不上传任何服务器」。
+7. **结果回传窄门**：凭据成功即回显「已就绪」状态，结果可复制 Markdown 回传 agent 继续执行。
+8. **画出来**：登录/认证流程用内联 SVG 画（流程箭头图 + 界面 mock，含密码框、验证码框、二维码、状态灯），遵循法则 12 手写纪律。
+9. **可审计**：页脚标来源项目 + 事实核对（读了哪些文件/行号），诚实标注「已有」vs「缺」。
+
 ## herdr 聚焦模式（可选增强）
 
 当用户环境有 pane 管理器（如 herdr，先读 `~/.agent/memory/herdr.md`）时，把 HTML 里的条目连到真实窗口：
@@ -169,6 +190,12 @@ compatibility: any environment where an AI agent can write a single self-contain
 - [ ] 有形状的数据（占比/趋势/流程/对比）已主动手写内联 SVG 呈现，不只表格/文本
 - [ ] 讲界面/交互/流程/故事板时已画内联 SVG mock（窗口/侧边栏/表单/气泡可见），不是只有文字描述或外链截图
 - [ ] 手写 SVG 规范：无 `<span>`/`<div>`、`<text>` 内无嵌套 HTML（否则只出外框+空白）
+- [ ] HITL 凭据页面：密码 `type="password"` 可切明文、API key/验证码输入框 placeholder 写格式、Enter 提交 + 粘贴可用
+- [ ] 二维码（如需）内联可见（data URI / 手写 SVG），带过期倒计时/刷新，不只藏 `<details>`
+- [ ] HITL 等待态标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试/过期兜底，无静默挂起
+- [ ] 凭据安全：默认遮蔽、不落明文日志、页面零远程端点、复制后提示清剪贴板、页脚声明仅本机使用
+- [ ] HITL 凭据成功/失败状态可复制 Markdown 回传 agent
+- [ ] 布局密度：多张并列卡用对称网格（2×2 优先），无 3+1 错落空洞；结论条浅色卡片 + 主色左边框，无深色渐变巨块；卡内信息留白、字号层级统一；正文行距 ≥1.5×、卡间距 ≥14px、左右留白 ≥10%；窄屏（<760px）网格降单列
 
 ## 反模式（血泪教训）
 
@@ -193,6 +220,14 @@ compatibility: any environment where an AI agent can write a single self-contain
 - ❌ 为画图引 chart.js / d3 / echarts CDN → 违背单文件自包含（法则 6）；原生 `<svg>` 手写 1-5KB 就够
 - ❌ 手写 SVG 用 `<span>` 包徽标、`<text>` 嵌 `<code>` → foreign HTML 不渲染，只出外框+标题+空白；用 `<g>` + 纯文本 `<text>`（eval 12 血泪）
 - ❌ 讲界面/流程只给文字描述、HTML 片段或外链截图 → 用户反复追问 "where is the visual SVG?"；把 UI mock 画成内联 SVG（窗口/侧边栏/表单/气泡/状态灯可见）
+- ❌ 输密码用 `type="text"` 明文、secret 落明文 DOM/日志 → 用 `type="password"` + 👁 明文/星号切换，遮蔽且不落日志
+- ❌ 二维码外链 `<img src="qrcode.png">` 或藏 `<details>` → 单文件自包含被破、手机扫不到即卡死；data URI / 手写 SVG 内联 + main 正文可见
+- ❌ 凭据输入框不写格式 placeholder、校验吞错 → 人类不知填啥（key 格式?几位?）、填错静默失败；placeholder 写格式 + toast/红框即时反馈
+- ❌ 等待人类输凭据时静默挂起无过期 → 标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试与过期兜底
+- ❌ 复制 secret 不提示清剪贴板 / 页面调远程端点收集凭据 → 凭据泄露面扩大；复制后提示清剪贴板 + 页面零远程端点 + 页脚声明仅本机使用
+- ❌ 布局过密（卡片 8+ 层信息贴死、字号 11.5-16 乱混、间距 <10px）→ 用户判"乱"，窄门体验被布局毁掉；按法则 14 加留白、统层级
+- ❌ 多卡用 `repeat(auto-fit,minmax(300px,1fr))` → 4 卡错落成 3+1、右下空洞；用对称网格 2×2（窄屏降单列）
+- ❌ 结论条 / TL;DR 用深色渐变巨块 → 在浅色页里抢走全部注意力；用浅色卡片 + 主色左边框
 
 ## 规则库（rules/）
 
@@ -201,8 +236,9 @@ compatibility: any environment where an AI agent can write a single self-contain
 - `rules/_sections.md` — 5 大类索引（ia / interact / compose / changes / trust）
 - `rules/ia-verdict-first.md` · `ia-narrow-gateway.md` — 结论前置 / 窄网关不搬运
 - `rules/interact-interface.md` · `interact-action-loop.md` — 交互即接口 / 行动闭环
-- `rules/compose-main-subs.md` · `rules/compose-inline-assets.md` · `rules/compose-svg-proactive.md` — main + subs 拆分省 token / SVG·图片内联默认 / 主动 SVG 数据可视化
+- `rules/compose-main-subs.md` · `rules/compose-inline-assets.md` · `rules/compose-svg-proactive.md` · `rules/compose-density-layout.md` — main + subs 拆分省 token / SVG·图片内联默认 / 主动 SVG 数据可视化 / 视觉密度与布局纪律（对称网格 · 轻量结论条 · 留白）
 - `rules/changes-frozen-bar.md` · `changes-badge-in-template.md` · `changes-subview-jump.md` · `changes-flash-locate.md` · `changes-no-hash-anchor.md` — SPA 改动预览 5 条
 - `rules/trust-honest-auditable.md` — 诚实可审计
+- `rules/interact-hitl-input.md` — HITL 人机凭据窄门（密码/密钥/验证码输入 + 内联二维码 + 安全复制）
 
 规则格式：frontmatter（title/impact/tags）+ Incorrect/Correct 代码对照 + Why 说明。做对应场景时先读对应规则文件。
