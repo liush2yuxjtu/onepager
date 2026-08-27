@@ -192,9 +192,9 @@ description: >-
 2. 标准 React schema 处理 KPI、dashboard、图表组合、诊断、矩阵、时间线内容、摘要、筛选和下钻。只有节点边、自由画布、地图图层、视频轨道、严格坐标等非树形语法才写 `defineSchema`。
 3. 组件保持中等粒度并与任务相关。优先 `ArtifactFrame`、`Section`、`Stack`、`Grid`、`Metric`、`MetricGrid`、`LineChart`、`BarChart`、`Funnel`、`EvidenceTable`、`Finding`、`Callout`、`Legend`、`FilterBar`、`ActionBar`。拒绝 `Div`、`Span`、`Rect`、`Path`、`BlueBox`、`BigText`、`CustomHTML`、`CustomCSS`、`Script`、`FullBusinessDashboard`。
 4. Catalog 每个 prop 只用一种稳定格式，少用 union；可选值用 nullable；视觉只给有限枚举和语义 `tone`；图表接收固定 `series/points`。spec 禁止任意 HTML、JavaScript、React 源码、`className`、`style`、`runScript`、`executeScript` 和任意 SVG path。
-5. 按任务实际使用 state、repeat、visibility、actions、watchers、validation 和 `useBoundProp`，不靠 catalog 名字假装采用 json-render。host action 回调只能做本地状态、复制、下载等无后端动作。
+5. 数据驱动且带筛选/下钻/行动的任务必须在 spec 中真实出现 `state`、`repeat`、`visible`、`on`、`watch` 和绑定表达式，registry 输入组件必须使用 `useBoundProp`，并挂载 Action/Visibility/Validation providers。不得把 evidence/actions 数组塞进一个大组件的 props，再由组件内部手写 map/filter 来假装采用 json-render。host action 回调只能做本地状态、复制、下载等无后端动作。`defineRegistry` 返回的 `handlers` 是工厂，不得用 `handlers(() => undefined, ...)` 挂载，否则所有自定义 action 会静默跳过；独立页优先用外部 `createStateStore` 加直接读取 store 的 host handlers；每个 catalog action 必须有可观察效果，禁止用 `()=>{}` 空 handler 覆盖真实 action；声明自定义 action 后，`JSONUIProvider`/`ActionProvider` 必须显式接收 `handlers={...}`，不能只定义后不挂载。复制 action 必须为 Clipboard API 提供本地 textarea/`execCommand('copy')` 回退，保证 file/权限受限环境可用。
 6. SpecStream 先建立 root 和根容器，再首屏结论/KPI及其 state，再图表证据，最后次要交互。每一步引用的 element key 必须已经存在或在同一原子 patch 中建立。
-7. 编辑单字段用 JSON Patch，结构区块用 Merge Patch，文本密集内容才用 diff。默认不全量重生成 spec。
+7. 编辑单字段用 JSON Patch，结构区块用 Merge Patch，文本密集内容才用 diff。默认不全量重生成 spec。当前 React schema 的 `catalog.validate(...).data` 可能剥掉 `state/on/watch`；用它判定成功，但 `validateSpec` 和 Renderer 必须接收同一个已验证的 raw spec，不能渲染被裁剪的 `.data`。
 8. 开发期可用 Vite + React。最终通过 `vite-plugin-singlefile` 产出一个 `dist/index.html`，不得加载外链资源。
 
 完整实现、流式顺序、编辑协议和验证代码见 `references/json-render-implementation.md`。生态能力的使用边界和 single-file 适配性见 `references/json-render-capability-map.md`。
@@ -204,9 +204,9 @@ description: >-
 只跑一轮有界 QA。修复明确失败后最多复跑对应检查一次，不做无收益的截图审美循环或额外模型评审。
 
 - 原生路径：打开 HTML，走核心交互，检查窄屏无横向溢出、键盘 focus、`prefers-reduced-motion` 和一次 axe；确认单文件与无外链。
-- json-render 路径：先 build/typecheck；运行 `catalog.validate(spec)` 与 `validateSpec(spec)`；再执行 `node <skill-dir>/scripts/verify-output.mjs dist/index.html --spec <spec.json>`；打开 `dist/index.html`，验证核心筛选/下钻/状态动作、窄屏溢出和一次 axe。
+- json-render 路径：先 build/typecheck；运行 `catalog.validate(spec)` 与 `validateSpec(spec)`。数据驱动 React 路径再执行 `node <skill-dir>/scripts/verify-output.mjs dist/index.html --spec <spec.json> --source <file>... --require-react-features`，对 catalog、registry、validation 和 runtime 所在的每个 `.ts/.tsx` 重复 `--source`；自定义图路径改用 `--require-custom-graph`。打开 `dist/index.html`，验证核心筛选/下钻/状态动作、窄屏溢出和一次 axe。
 - 两条路径都在页脚清楚标注来源项目名、绝对路径和当前 Pi session ID；生成后用系统默认浏览器打开。
-- 全部通过就结束。关闭 dev server、preview、browser session、monitor、定时器和临时进程；对后台 PID 使用 `trap` 清理，确认子进程退出，不能让 `pi -p` 因长连接挂住。
+- 全部通过就结束。若 `agent-browser` 可用，必须用命名 session 走核心交互并运行一次 `agent-browser a11y --json`；本地文件可用带 `trap` 的临时 loopback 静态服务，不把它算作交付后端。修复明确 violations 后只复跑失败项，关闭 session 和服务。仅当 browser 工具确实不可用时，才打开系统浏览器并做一次 DOM/静态自检，记录“自动化不可用”；不要安装、修复或轮换多个浏览器框架。关闭自己启动的 dev server、preview、browser session、monitor、定时器和临时进程；只检查本任务 PID，不能枚举或终止无关进程，也不能让 `pi -p` 因长连接挂住。
 
 ## herdr 聚焦模式（可选增强）
 
