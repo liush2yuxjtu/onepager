@@ -151,7 +151,7 @@ registry 根据 `series/points` 计算 scale、坐标和 SVG `d`。spec 不能�
 - 地图：layer、feature、viewport
 - 视频：track、clip、frame
 
-关系图 spec 可以包含受限的 `x/y/source/target/relation/nodeKind`，但不能包含 SVG path、DOM、CSS 或事件源码。custom renderer 从 nodes/edges 计算连线。另建显式可信 registry，例如 `const nodeRegistry = { service: ServiceNode, module: ModuleNode }`，并拒绝 registry 中不存在的 kind；不要只把 `node.kind` 拼进 CSS class 后由一个大 `App` 处理全部类型。普通业务 dashboard 不得自定义 schema。
+关系图 spec 可以包含受限的 `x/y/source/target/relation/kind`，但不能包含 SVG path、DOM、CSS 或事件源码。custom renderer 从 nodes/edges 计算连线。另建显式可信 registry，例如 `const nodeRegistry = { service: ServiceNode, module: ModuleNode }`，并拒绝 registry 中不存在的 kind；不要只把 `node.kind` 拼进 CSS class 后由一个大 `App` 处理全部类型。普通业务 dashboard 不得自定义 schema。
 
 ## 流式生成顺序
 
