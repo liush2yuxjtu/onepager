@@ -29,5 +29,9 @@
   {"query":"请在 README 里画一个 Mermaid 架构图，说明 MCP 到服务模块的调用关系。静态文档即可，不需要点击、筛选或独立页面。","should_trigger":false},
   {"query":"做一套关于事故响应流程的 8 页 PPT，给管理层演示，包含时间线和责任人。交付 pptx，不要网页。","should_trigger":false},
   {"query":"给 Chrome 扩展新增一个 popup 页面，用来筛选标签页和关闭重复项。请直接改 extension/src 下的代码并打包扩展。","should_trigger":false},
-  {"query":"认证流程经常卡住，请先写一份安全设计评审：威胁模型、secret 生命周期、2FA 失败恢复和审计要求。输出 Markdown，不要做凭据输入页面。","should_trigger":false}
+  {"query":"认证流程经常卡住，请先写一份安全设计评审：威胁模型、secret 生命周期、2FA 失败恢复和审计要求。输出 Markdown，不要做凭据输入页面。","should_trigger":false},
+  {"query":"把这组 14 日增长数据做成可离线打开的 visual sub-artifact。筛选、下钻和行动状态都要由 json-render catalog/spec 约束，后续会用 JSON Patch 改单项、Merge Patch 换证据区。","should_trigger":true},
+  {"query":"做一个 nodes/edges 自由画布关系页，节点有固定坐标、边可结构化增删；请用 json-render 自定义 schema 和可信 SVG renderer，最后交一个离线 HTML。","should_trigger":true},
+  {"query":"当前产品已经有 @json-render/react 页面，请直接修 src/Dashboard.tsx 的 useBoundProp 类型错误并补单测，不要生成独立 HTML 或评审页。","should_trigger":false},
+  {"query":"用三句话总结今天的销售数据，直接发在聊天里，不要 HTML、图表、筛选或 artifact。","should_trigger":false}
 ]

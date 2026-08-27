@@ -102,6 +102,20 @@ KPI、dashboard、图表组合、诊断、矩阵、时间线内容、摘要、�
 
 动态 prop 需要 catalog 接受对应表达式。只给确实需要绑定的 prop 一个受限动态值格式，不要把所有 prop 降级为 `z.unknown()`。registry 中的输入组件用 `useBoundProp` 写回 `$bindState` 或 `$bindItem`。
 
+### 数据驱动 React 的完成门槛
+
+任务含筛选、下钻、重复证据和行动状态时，交付前逐项检查源码，而不是只看页面外观：
+
+- spec 顶层有 `state`。
+- state 数组通过 `repeat` 和 `$item` 渲染，至少一处 `visible` 由 state/item 控制。
+- 组件事件通过 `emit` 对应 spec 顶层 `on`，并执行 built-in 或 catalog action。
+- 至少一个受控输入通过 `$bindState` / `$bindItem` 与 registry 的 `useBoundProp` 双向绑定。
+- 至少一个 `watch` 对状态变化触发本地 action。
+- host 挂载 Action、Visibility、Validation providers，或使用等价的 `JSONUIProvider`。
+- 自定义 action 真实执行。`defineRegistry` 返回的 `handlers` 是一个工厂；`handlers(() => undefined, ...)` 会让内部 action 因拿不到 `setState` 而静默跳过。也不能传入 `{ copyActions: () => {} }` 一类空 host handler，它会覆盖真实 action。Provider 必须出现 `handlers={hostHandlers}` 或等价接线。
+
+缺任一项就不能声称完整使用了 json-render。不要把 `EvidenceList.props.items`、`ActionList.props.items` 一类业务数组交给大组件内部 `map/filter`。应把数组放进 spec state，由 `Stack`/`Grid` repeat 一个 `Finding`/`ActionItem` 模板。图表可保留固定 `series/points`，因为图形几何由可信 registry 统一计算。
+
 ## catalog 设计
 
 优先使用与任务相关的中等粒度组件：
@@ -137,7 +151,7 @@ registry 根据 `series/points` 计算 scale、坐标和 SVG `d`。spec 不能�
 - 地图：layer、feature、viewport
 - 视频：track、clip、frame
 
-关系图 spec 可以包含受限的 `x/y/source/target/relation/nodeKind`，但不能包含 SVG path、DOM、CSS 或事件源码。custom renderer 从 nodes/edges 计算连线，registry 只允许 catalog 声明的 node kind。普通业务 dashboard 不得自定义 schema。
+关系图 spec 可以包含受限的 `x/y/source/target/relation/kind`，但不能包含 SVG path、DOM、CSS 或事件源码。custom renderer 从 nodes/edges 计算连线。另建显式可信 registry，例如 `const nodeRegistry = { service: ServiceNode, module: ModuleNode }`，并拒绝 registry 中不存在的 kind；不要只把 `node.kind` 拼进 CSS class 后由一个大 `App` 处理全部类型。普通业务 dashboard 不得自定义 schema。
 
 ## 流式生成顺序
 
@@ -165,24 +179,67 @@ SpecStream 每行是一条 RFC 6902 JSON Patch。按可见价值排序：
 把 spec 放在独立 JSON 文件最容易审计和 patch，例如 `src/spec.json`。在挂载前执行：
 
 ```ts
-import { validateSpec, formatSpecIssues } from "@json-render/core";
+import { validateSpec, formatSpecIssues, type Spec } from "@json-render/core";
 import rawSpec from "./spec.json";
 import { catalog } from "./catalog";
 
 const catalogResult = catalog.validate(rawSpec);
-if (!catalogResult.success || !catalogResult.data) {
+if (!catalogResult.success) {
   throw new Error(`catalog.validate failed: ${catalogResult.error?.message ?? "unknown"}`);
 }
-const structureResult = validateSpec(catalogResult.data);
+// 当前 React schema 的 parsed data 可能剥掉 state/on/watch。
+// catalog.validate 负责判定；运行时继续使用同一个已验证 raw spec。
+export const spec = rawSpec as unknown as Spec;
+const structureResult = validateSpec(spec);
 if (!structureResult.valid) {
   throw new Error(`validateSpec failed: ${formatSpecIssues(structureResult.issues)}`);
 }
-export const spec = catalogResult.data;
 (globalThis as typeof globalThis & { __ONEPAGER_VALIDATION__?: unknown })
   .__ONEPAGER_VALIDATION__ = { catalog: true, spec: true };
 ```
 
-`catalog.validate` 检查 catalog/Zod，`validateSpec` 检查引用、visible、repeat 和 state。不能只跑一个。
+`catalog.validate` 检查 catalog/Zod，`validateSpec` 检查引用、visible、repeat 和 state。不能只跑一个。不要把 `catalog.validate(...).data` 直接交给 Renderer：截至当前 React schema，它的 Zod 解析结果会裁掉 schema 未声明但运行时支持的 `state`、`on` 和 `watch`。应在 validate 成功后继续渲染同一个 raw spec。
+
+### host action wiring
+
+独立页优先创建一个外部 store，host handlers 直接读写它：
+
+```tsx
+import { createStateStore } from "@json-render/core";
+
+const store = createStateStore(spec.state ?? {});
+async function copyMarkdown(text: string) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch { /* fall through */ }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.append(area);
+  area.select();
+  if (!document.execCommand("copy")) throw new Error("copy failed");
+  area.remove();
+}
+
+const hostHandlers = {
+  announceRange: ({ range }: { range?: string }) =>
+    store.set("/announcement", `已切换 ${range ?? "默认周期"}`),
+  copyActions: async () => {
+    const state = store.getSnapshot();
+    await copyMarkdown(state.actions);
+  },
+};
+
+<JSONUIProvider registry={registry} store={store} handlers={hostHandlers}>
+  <Renderer spec={spec} registry={registry} />
+</JSONUIProvider>
+```
+
+不要把 `defineRegistry` 返回的 handler factory 当成最终 handler map。特别是 `handlers(() => undefined, () => state)` 会生成可调用外壳，但每个 action 内部都会因没有 `setState` 而直接跳过。不要再用同名空 host handler 覆盖 registry action，也不要只在 `defineRegistry` 中写 action 后忘记接到 Provider。每个 catalog action 都要有可观察效果，例如更新 store、复制文本或写入 aria-live 状态；`JSONUIProvider`/`ActionProvider` 必须显式带 `handlers={...}`。若确实要复用 registry action functions，就提供真实 `SetState` 适配器；对 onepager，直接 host handlers 更短也更清楚。
 
 ## single-file 构建
 
@@ -217,11 +274,23 @@ export default defineConfig({
 构建后运行：
 
 ```bash
-node <onepager-skill>/scripts/verify-output.mjs dist/index.html --spec src/spec.json
+# 标准数据驱动 React
+node <onepager-skill>/scripts/verify-output.mjs dist/index.html \
+  --spec src/spec.json --source src/main.tsx --source src/catalog.ts \
+  --source src/registry.tsx --source src/validation.ts \
+  --require-react-features
+
+# 自定义节点边图
+node <onepager-skill>/scripts/verify-output.mjs dist/index.html \
+  --spec src/spec.json --source src/main.tsx --source src/schema.ts \
+  --require-custom-graph
+
 open dist/index.html
 ```
 
-浏览器只做一次有界验收：首屏结论、核心筛选/下钻/动作、键盘操作、focus、窄屏无横向溢出、`prefers-reduced-motion`、axe 无明确 violations。修复明确失败后只复跑失败项。
+浏览器只做一次有界验收：首屏结论、核心筛选/下钻/动作、键盘操作、focus、窄屏无横向溢出、`prefers-reduced-motion`、axe 无明确 violations。若 `agent-browser` 命令存在，使用命名 session，跑核心交互后执行 `agent-browser --session <id> a11y --json`；本地文件可临时用 `python3 -m http.server --bind 127.0.0.1`，必须用 `trap` 关闭 server 和 session。不要只调用系统 `open` 就声称通过 axe。修复明确失败后只复跑失败项。若 browser automation 确实不可用，执行一次系统浏览器打开和 DOM/静态自检后如实记录，不要现场安装或排查 Playwright、Selenium 等框架。
+
+无障碍细节：普通文本和背景至少 4.5:1，大号文本至少 3:1；`muted`、完成态、图表内标签也不能靠 opacity 降到阈值以下。带 `aria-label` 的 `div` 要加合适 role 或改用语义元素。复用型 `Callout` 不要默认渲染无名称 `<aside>`；用普通 `div`，或为每个 landmark 提供唯一 `aria-label/aria-labelledby`。含 `tabIndex`/`role=button` 节点的交互 SVG 不得把外层标成 `role=img`；保留 `<title>/<desc>`，并提供同等关系表格。
 
 ## 进程清理
 
