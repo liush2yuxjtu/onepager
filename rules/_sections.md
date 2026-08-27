@@ -18,7 +18,7 @@ The section ID (in parentheses) is the filename prefix used to group rules.
 ## 3. Composition (compose)
 
 **Impact:** HIGH
-**Description:** main + subs 组合与超长单文件的处理。token 成本与可维护性取决于是否拆分正确。
+**Description:** main + subs 组合与超长单文件的处理。token 成本与可维护性取决于是否拆分正确。布局密度（对称网格 / 轻量结论条 / 留白）是视觉层第一红线，过密即判"乱"。
 
 ## 4. Changes Preview (changes)
 

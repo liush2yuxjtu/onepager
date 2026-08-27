@@ -5,11 +5,14 @@
 
 ![onepager hero](assets/hero.svg)
 
-**Onepager** 是给 AI agent 的「窄门哲学」技能：当你要交付交互式 HTML 报告 / dashboard / 诊断页 / explainer / 计划页时，它保证产物不是信息全铺开的静态长文，而是一扇扇窄门——每次交互只交换**最小必要信息**，让人与 agent 高效协作。
+**Onepager** 是给 AI agent 的「窄门哲学」技能。它先在原生单文件 HTML 与 onepager + json-render 之间路由，再用最小必要信息完成交互。简单报告不承担 React 成本；数据驱动 visual sub-artifact 才使用受 catalog 约束的 spec/state/actions/patch/validation。
 
-## 为什么叫 onepager
+## 两条路径
 
-交付物始终是**一个**单文件 HTML：结论一屏可见、细节按需展开、交互全部保留、离线可开、手机可看。它不绑架用户环境，也不搬运全量上下文。
+- 原生 onepager：手写一个自包含 HTML，无依赖、无构建，适合简单报告、静态诊断和轻交互。
+- onepager + json-render：Vite + React 开发，真实使用 schema/catalog/spec/registry/state/actions/validation，最终构建成一个 `dist/index.html`。
+
+两条路径都结论一屏可见、细节按需展开、离线可开、手机可看。
 
 ## 核心法则
 
@@ -34,8 +37,12 @@ onepager/
 ├── SKILL.md                 # 主 skill：法则 + 工作流 + 检查清单 + 反模式
 ├── evals/
 │   └── evals.json           # 评测用例（Mac 发热诊断 / 臃肿验收报告瘦身）
+├── references/
+│   ├── json-render-implementation.md
+│   └── json-render-capability-map.md
 ├── scripts/
-│   └── focus-server.cjs     # 可选：loopback 聚焦服务，把 HTML 条目连到真实窗口
+│   ├── focus-server.cjs
+│   └── verify-output.mjs    # 单文件、外链与 spec 安全检查
 └── README.md
 ```
 

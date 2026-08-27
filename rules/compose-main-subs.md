@@ -5,9 +5,11 @@ impactDescription: 单文件 >200KB 时每次迭代全量重读写，token 成�
 tags: onepager, compose, main, subs, token
 ---
 
-## 组合产物：main + subs 拆分省 token
+## 大体量原生产物：main + subs 拆分省 token
 
-交付物需要多个页面时（主报告 + 子报告 / 多 tab 看板 / 报告 + 附录），**不要把所有内容塞进一个超大 HTML**。
+本规则只用于用户明确要多页，或原生 onepager 的证据天然超过 200KB。默认原生路由仍交一个 HTML；json-render visual sub-artifact 必须打进同一个 `dist/index.html`，不按本规则拆包。
+
+需要多个原生页面时（主报告 + 子报告 / 多 tab 看板 / 报告 + 附录），不要把所有内容塞进一个超大 HTML。
 
 **Incorrect（单文件 500KB 全内联）：**
 

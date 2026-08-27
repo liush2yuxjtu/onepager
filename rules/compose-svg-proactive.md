@@ -5,9 +5,11 @@ impactDescription: 有形状的数据/界面不画 SVG = 丢窄门（用户追�
 tags: onepager, compose, svg, viz, charts, ui-mock, inline, self-contained
 ---
 
-## 数据与界面有形状就主动画内联 SVG
+## 原生路径的数据与界面要画内联 SVG
 
-只要内容有形状——数据（占比/分布/趋势/流程/层级/对比/状态机）**或界面**（UI mock/交互流程/故事板/快照/侧边栏/表单/气泡/按钮）——就**主动手写内联 `<svg>`** 画出来，而不是只堆 HTML 表格、贴数字文本，或只给一句"界面长这样"的文字描述。原生 `<svg>` 手写 1-5KB 就够，禁止引 CDN 图表库。手写时遵守 SVG 是 XML 的纪律。**别等用户追问"where is the visual SVG?"**——交付物在讲 UI/UX/流程/数据时，默认就该有一张内联 SVG。
+本规则只适用于原生 onepager。onepager + json-render 路径改用 `references/json-render-implementation.md`：spec 只放受 catalog 约束的 `series/points/nodes/edges`，可信 registry 负责 SVG/Canvas 实现，禁止把任意 path 写进 spec。
+
+原生路径里，只要内容有形状，包括数据（占比/分布/趋势/流程/层级/对比/状态机）或界面（UI mock/交互流程/故事板/快照/侧边栏/表单/气泡/按钮），就主动手写内联 `<svg>`，而不是只堆 HTML 表格、贴数字文本，或只给一句"界面长这样"的文字描述。原生 `<svg>` 手写 1-5KB 就够，禁止引 CDN 图表库。手写时遵守 SVG 是 XML 的纪律。别等用户追问"where is the visual SVG?"。
 
 **Incorrect（只给表格/数字，或引 CDN 图表库）：**
 

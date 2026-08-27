@@ -216,6 +216,81 @@
         "A checkable action checklist with a copy-to-markdown button exists",
         "If SVG is used for stage cards, no <span>/<div>/<code> appears inside it"
       ]
+    },
+    {
+      "id": 16,
+      "prompt": "有个 CLI 部署工具，登录认证阶段经常要人工介入：要输云平台密码、填 API key（sk-... 格式）、输短信验证码（6 位），有时还要扫二维码（2FA）。这个环节老卡住——人不知道要填什么、格式是啥、code 从哪来、有没有过期。请做一个 onepager：结论先说认证卡在哪几处、缺什么；页面要有凭据输入框（密码 type=password 可切换明文、API key 单行、验证码 6 位，placeholder 写清格式，Enter 提交 + 支持粘贴）、二维码内联可见（data URI 或手写 SVG，带过期倒计时/刷新）、每项标注「在等什么 / 从哪拿 / 多久过期」+ 失败重试；凭据默认遮蔽、页面零远程端点、复制后提示清剪贴板；凭据就绪状态可复制 Markdown 回传 agent。用内联 SVG 画认证流程。单文件自包含离线可开，来源项目 /tmp/deploy-cli，session eval-session-16。",
+      "expected_output": "A single self-contained interactive HTML for a HITL credential-entry (login/auth) flow: verdict-first on where auth is stuck and what's missing; credential input fields (password type=password with reveal toggle, API key single-line, 6-digit code — placeholder documents format, Enter submits, paste supported, format validation gives immediate feedback); QR code inline-visible (data URI or hand-written SVG) with expiry countdown/refresh; each credential item labels 在等什么/从哪拿/多久过期 + failure retry; credentials masked by default, page has zero remote endpoints, copy hints to clear clipboard; ready-state captured to copyable Markdown for the agent; an inline SVG draws the auth flow; zero external resources.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external <script>/<link>/<img src> resources",
+        "A password field uses type=password with a reveal/eye toggle, and API-key / code inputs have placeholders documenting the format (sk-... / 6 digits), Enter submits, and paste is supported",
+        "Input format validation gives immediate feedback (toast/inline) rather than silently swallowing bad input",
+        "Any QR code is inline-visible (data URI or hand-written SVG) in the main body with expiry countdown/refresh, not only inside a details element",
+        "Each credential item labels 在等什么 / 从哪拿 / 多久过期 plus failure-retry / expiry fallback — no silent indefinite wait",
+        "Credentials are masked by default, the page has zero remote endpoints, copy actions hint to clear the clipboard, and the footer states local-only usage",
+        "A verdict-first line states where auth is stuck and which credentials/fallbacks are missing",
+        "Ready/entered state is captured to a copyable Markdown result for feedback to the agent",
+        "An inline SVG draws the auth/credential flow (no external chart libraries)"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "有个工具登录要人工介入：有时候要输密码，有时候要填 key，有时候要输验证码，有时候还要扫码。每次都卡在不知道填什么。给我做个 onepager 看看这个认证流程。单文件离线可开，来源 /tmp/deploy-cli，session eval-session-17。",
+      "expected_output": "A single self-contained interactive HTML diagnosing a login/auth flow that needs human credential entry (password / API key / code / QR). Crucially the prompt does NOT enumerate any requirements, so the page must proactively provide: masked credential inputs (password type=password with reveal, key/code with format placeholders, Enter + paste), an inline-visible QR (data URI or hand-written SVG) where scanning applies, per-item waiting labels (在等什么/从哪拿/多久过期) with expiry fallback, zero remote endpoints with masked-by-default secrets, and a copyable Markdown ready-state for the agent — the credential-entry affordances appear even though the user never named them.",
+      "files": [],
+      "expectations": [
+        "Output is a single self-contained HTML file with zero external <script>/<link>/<img src> resources",
+        "The page proactively includes masked credential input fields (type=password with reveal toggle; key/code inputs with format placeholders) despite the prompt never naming an input",
+        "The page proactively includes an inline-visible QR (data URI or hand-written SVG) for scanning, despite the prompt never naming QR",
+        "Each credential item labels 在等什么 / 从哪拿 / 多久过期 with failure-retry / expiry fallback rather than an indefinite wait",
+        "Credentials are masked by default and the page has zero remote endpoints (secrets not shipped to any server)",
+        "A verdict-first line explains what's stuck and what's needed to proceed",
+        "Ready/entered state is captured/copyable as Markdown for feedback to the agent",
+        "An inline SVG draws the auth flow with no external chart libraries"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "给本周发布健康检查做一个可双击打开的轻量 onepager。固定数据：构建成功率 98.7%、回滚 1 次、P95 420ms、阻塞项 2 个。只需要首屏一句结论、四个指标、一个默认折叠的证据区，以及把结论复制成 Markdown 的按钮；数据不会流式更新，也不需要筛选或复杂状态。不要搭后端。来源项目写 /tmp/release-health，Pi session ID 写 eval-session-18。",
+      "expected_output": "选择原生 onepager 路由，只生成一个无依赖、自包含 HTML；不创建 React/Vite/json-render 工程。",
+      "files": [],
+      "expectations": [
+        "输出目录只有一个可交付 HTML，没有 package.json、src、node_modules 或构建配置。",
+        "HTML 不包含 @json-render、defineCatalog、defineRegistry、React 或 Vite 运行时代码。",
+        "页面首屏在指标和证据前给出可行动结论，证据默认折叠，复制 Markdown 按钮可用。",
+        "HTML 内联 CSS/JS，无外部 script、stylesheet、image、font 或其他运行时资源。",
+        "页面响应式、键盘 focus 可见、支持 prefers-reduced-motion，并标注 /tmp/release-health 与 eval-session-18。"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "做一份“增长诊断：从访问到转化”的离线 onepager。它要嵌入一个可复用的 visual sub-artifact：近 7/14 日切换、渠道筛选、KPI 点击下钻、转化折线、渠道柱图、漏斗、证据列表和行动状态。内置模拟数据即可。后续会用 JSON Patch 改单个指标、用 Merge Patch 增删整段证据，所以组件和状态必须受 catalog 约束，不能把整张业务看板硬编码成一个组件。页面无后端。来源项目写 /tmp/growth-diagnostic，Pi session ID 写 eval-session-19。最终交付一个离线 HTML。",
+      "expected_output": "选择标准 React json-render 路由，真实使用 core/react 的 catalog/spec/registry/state/actions/validation，并构建一个无外链的 dist/index.html。",
+      "files": [],
+      "expectations": [
+        "源码真实导入 @json-render/core 与 @json-render/react，并使用 React schema、defineCatalog、defineRegistry 和 Renderer，而不是只在文案中提到 json-render。",
+        "存在独立可审计的 flat-tree spec，包含 root/elements/state，并实际使用 repeat、visible、on、watch 和动态或双向绑定；registry 输入组件使用 useBoundProp。",
+        "catalog 采用任务相关的中等粒度语义组件，至少覆盖 Metric、LineChart、BarChart、Funnel、EvidenceTable、FilterBar 或同等组件，且没有 FullBusinessDashboard 这类整页逃生舱。",
+        "spec 不含任意 HTML、JavaScript、React 源码、className、style、runScript、executeScript、Div/Span/Rect/Path 或任意 SVG path；图表使用固定 series/points 数据。",
+        "源码执行 catalog.validate(spec) 与 validateSpec(spec)，两者失败都会阻止挂载；编辑说明或样例区分单字段 JSON Patch 与结构区块 Merge Patch。",
+        "构建和 typecheck 通过，最终只有 dist/index.html；JS/CSS 全内联且无外链资源。",
+        "浏览器中的 7/14 日切换、渠道筛选、KPI 下钻和至少一个状态 action 可用，窄屏无横向溢出，页脚标注 /tmp/growth-diagnostic 与 eval-session-19。"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "做一个离线 onepager 展示 6 个 MCP 服务与“专家创建、技能进化、诊断、发布”模块之间的调用关系。每个节点有 id、kind、状态和固定 x/y，边有 source、target、relation；点击节点高亮一跳邻居，可按 stdio/SSE 与状态筛选，并保留可访问的关系明细。后续要用结构化 patch 增删节点和边。这个数据本质是节点边自由画布，不要硬塞进普通 React children 树，也不要让 spec 提供 SVG path、HTML、CSS 或脚本。无后端。来源项目写 /tmp/mcp-graph，Pi session ID 写 eval-session-20。最终交付一个离线 HTML。",
+      "expected_output": "选择 json-render 自定义 schema 路由，以 nodes/edges 为主语法，用受控 catalog 和可信 SVG/Canvas renderer 构建单文件 HTML。",
+      "files": [],
+      "expectations": [
+        "源码使用 defineSchema 和 defineCatalog 定义以 nodes/edges 为核心的非树形 spec，而不是把关系数据主结构改写成 root/elements/children。",
+        "graph spec 是独立可审计的数据，节点含 id/kind/x/y，边含 source/target/relation；不含 SVG d/path、HTML、JavaScript、React 源码、className、style、runScript 或 executeScript。",
+        "可信 registry/renderer 根据节点和边计算 DOM/SVG/Canvas 几何，spec 只能选择 catalog 声明的节点 kind 和有限视觉 tone。",
+        "catalog.validate 与针对图引用完整性的 validation 都通过；不存在 source/target 指向缺失节点的边。",
+        "节点点击会高亮一跳邻居，stdio/SSE 与状态筛选可用，并提供键盘可访问的关系明细。",
+        "构建和 typecheck 通过，最终只有 dist/index.html；JS/CSS 全内联、无后端和外链资源，页脚标注 /tmp/mcp-graph 与 eval-session-20。"
+      ]
     }
   ]
 }
